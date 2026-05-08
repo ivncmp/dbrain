@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>dbrain — Dashboard</title>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; background: #f0f2f5; color: #1a1a2e; min-height: 100vh; }
+
+    .header {
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      padding: 28px 32px 24px;
+      color: #fff;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.15);
+    }
+    .header-inner {
+      max-width: 1280px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .header-left { display: flex; align-items: center; gap: 14px; }
+    .brain-icon {
+      width: 42px; height: 42px;
+      background: linear-gradient(135deg, #e94560 0%, #ff6b6b 100%);
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px;
+      box-shadow: 0 4px 12px rgba(233,69,96,0.4);
+    }
+    .header-title { font-size: 22px; font-weight: 700; letter-spacing: -0.5px; }
+    .header-version {
+      font-size: 12px;
+      padding: 3px 10px;
+      background: rgba(255,255,255,0.12);
+      border-radius: 20px;
+      font-weight: 500;
+      letter-spacing: 0.3px;
+    }
+    .header-right { display: flex; align-items: center; gap: 12px; }
+    .pulse {
+      width: 10px; height: 10px; border-radius: 50%;
+      background: #22c55e;
+      box-shadow: 0 0 0 0 rgba(34,197,94,0.5);
+      animation: pulse 2s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(34,197,94,0.5); }
+      50% { box-shadow: 0 0 0 8px rgba(34,197,94,0); }
+    }
+    .status-text { font-size: 13px; color: rgba(255,255,255,0.7); font-weight: 500; }
+
+    .container { max-width: 1280px; margin: 0 auto; padding: 28px 32px; }
+
+    .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 14px; margin-bottom: 28px; }
+    .stat {
+      background: #fff;
+      border-radius: 16px;
+      padding: 22px 20px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.04);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .stat:hover { transform: translateY(-2px); box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+    .stat::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+    }
+    .stat.entities::before { background: linear-gradient(90deg, #6366f1, #8b5cf6); }
+    .stat.total::before { background: linear-gradient(90deg, #1a1a2e, #0f3460); }
+    .stat.hot::before { background: linear-gradient(90deg, #ef4444, #f97316); }
+    .stat.warm::before { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
+    .stat.cold::before { background: linear-gradient(90deg, #3b82f6, #60a5fa); }
+    .stat.convos::before { background: linear-gradient(90deg, #10b981, #34d399); }
+    .stat .value { font-size: 34px; font-weight: 800; letter-spacing: -1px; line-height: 1; }
+    .stat.entities .value { color: #6366f1; }
+    .stat.total .value { color: #1a1a2e; }
+    .stat.hot .value { color: #ef4444; }
+    .stat.warm .value { color: #f59e0b; }
+    .stat.cold .value { color: #3b82f6; }
+    .stat.convos .value { color: #10b981; }
+    .stat .label { font-size: 12px; color: #9ca3af; margin-top: 6px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; }
+
+    .search-box { margin-bottom: 28px; position: relative; }
+    .search-box input {
+      width: 100%; padding: 14px 20px 14px 48px;
+      background: #fff;
+      border: 2px solid #e5e7eb;
+      border-radius: 14px;
+      color: #1a1a2e;
+      font-size: 15px;
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    }
+    .search-box input:focus {
+      border-color: #6366f1;
+      box-shadow: 0 0 0 4px rgba(99,102,241,0.1), 0 4px 12px rgba(0,0,0,0.06);
+    }
+    .search-box input::placeholder { color: #b0b4c0; }
+    .search-icon {
+      position: absolute;
+      left: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 18px;
+      color: #9ca3af;
+      pointer-events: none;
+    }
+
+    .section-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: #9ca3af;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .section-title .count {
+      background: #e5e7eb;
+      color: #6b7280;
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-weight: 600;
+    }
+
+    .results { margin-bottom: 28px; }
+    .result-item {
+      background: #fff;
+      border-radius: 12px;
+      padding: 16px 20px;
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 16px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+      border-left: 3px solid #6366f1;
+      transition: transform 0.15s;
+    }
+    .result-item:hover { transform: translateX(4px); }
+    .result-item .fact { flex: 1; font-size: 14px; line-height: 1.6; color: #374151; }
+    .result-item .meta { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+    .entity-tag {
+      font-size: 11px;
+      padding: 3px 10px;
+      border-radius: 6px;
+      background: linear-gradient(135deg, #eff6ff, #e0e7ff);
+      color: #4f46e5;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .entities-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 12px; margin-bottom: 32px; }
+    .entity-card {
+      background: #fff;
+      border-radius: 14px;
+      padding: 20px;
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+      border: 1px solid transparent;
+      position: relative;
+      overflow: hidden;
+    }
+    .entity-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; bottom: 0;
+      width: 4px;
+      border-radius: 4px 0 0 4px;
+    }
+    .entity-card.project::before { background: linear-gradient(180deg, #6366f1, #8b5cf6); }
+    .entity-card.area::before { background: linear-gradient(180deg, #10b981, #34d399); }
+    .entity-card.resource::before { background: linear-gradient(180deg, #f59e0b, #fbbf24); }
+    .entity-card.archive::before { background: linear-gradient(180deg, #9ca3af, #d1d5db); }
+    .entity-card:hover {
+      border-color: #c7d2fe;
+      box-shadow: 0 4px 20px rgba(99,102,241,0.12);
+      transform: translateY(-2px);
+    }
+    .entity-card .entity-name { font-size: 15px; font-weight: 700; margin-bottom: 4px; color: #1a1a2e; }
+    .entity-card .entity-type {
+      font-size: 12px; color: #9ca3af; font-weight: 500;
+      display: flex; align-items: center; gap: 4px;
+    }
+    .entity-card .tiers { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+    .tier {
+      font-size: 11px;
+      padding: 3px 10px;
+      border-radius: 6px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .tier::before { content: ''; width: 6px; height: 6px; border-radius: 50%; }
+    .tier.hot { background: #fef2f2; color: #dc2626; }
+    .tier.hot::before { background: #ef4444; }
+    .tier.warm { background: #fffbeb; color: #d97706; }
+    .tier.warm::before { background: #f59e0b; }
+    .tier.cold { background: #eff6ff; color: #2563eb; }
+    .tier.cold::before { background: #3b82f6; }
+    .tier.empty-tier { background: #f9fafb; color: #9ca3af; }
+
+    .detail-header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .back-btn {
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      padding: 8px 12px;
+      cursor: pointer;
+      font-size: 16px;
+      transition: all 0.15s;
+      display: flex;
+      align-items: center;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    }
+    .back-btn:hover { background: #f9fafb; border-color: #d1d5db; }
+    .detail-name { font-size: 22px; font-weight: 800; color: #1a1a2e; letter-spacing: -0.5px; }
+    .detail-meta {
+      font-size: 13px;
+      color: #9ca3af;
+      font-weight: 500;
+      background: #f3f4f6;
+      padding: 4px 12px;
+      border-radius: 8px;
+    }
+
+    .facts-list { margin-bottom: 32px; }
+    .fact-row {
+      padding: 14px 20px;
+      background: #fff;
+      border-radius: 10px;
+      margin-bottom: 6px;
+      font-size: 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+      transition: transform 0.15s;
+    }
+    .fact-row:hover { transform: translateX(4px); }
+    .fact-row .fact-text { flex: 1; line-height: 1.5; color: #374151; }
+    .fact-row .fact-meta { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+    .fact-row .fact-category {
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 4px;
+      background: #f3f4f6;
+      color: #6b7280;
+      font-weight: 500;
+    }
+    .fact-row .access-count { font-size: 11px; color: #b0b4c0; font-weight: 500; }
+
+    .convos-list { margin-bottom: 32px; }
+    .conv-row {
+      background: #fff;
+      border-radius: 10px;
+      padding: 14px 20px;
+      margin-bottom: 6px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+      cursor: pointer;
+      transition: transform 0.15s;
+      border-left: 3px solid #10b981;
+    }
+    .conv-row:hover { transform: translateX(4px); }
+    .conv-row .conv-date { font-size: 14px; font-weight: 600; color: #1a1a2e; }
+    .conv-row .conv-source {
+      font-size: 11px; padding: 3px 10px; border-radius: 6px;
+      background: #ecfdf5; color: #059669; font-weight: 600;
+    }
+    .conv-row .conv-summary { font-size: 13px; color: #6b7280; flex: 1; margin: 0 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    .messages-list { margin-bottom: 32px; }
+    .msg-row { padding: 12px 16px; margin-bottom: 4px; border-radius: 10px; font-size: 14px; line-height: 1.6; white-space: pre-wrap; word-break: break-word; }
+    .msg-row.user { background: #eff6ff; border-left: 3px solid #3b82f6; color: #1e3a5f; }
+    .msg-row.assistant { background: #fff; border-left: 3px solid #10b981; color: #374151; box-shadow: 0 1px 2px rgba(0,0,0,0.03); }
+    .msg-row.system { background: #fefce8; border-left: 3px solid #eab308; color: #713f12; font-size: 13px; }
+    .msg-role { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+    .msg-row.user .msg-role { color: #3b82f6; }
+    .msg-row.assistant .msg-role { color: #10b981; }
+    .msg-row.system .msg-role { color: #eab308; }
+    .msg-content { max-height: 200px; overflow-y: auto; }
+    .msg-row.expanded .msg-content { max-height: none; }
+
+    .empty { color: #b0b4c0; font-style: italic; padding: 32px; text-align: center; background: #fff; border-radius: 12px; }
+    .loading-screen {
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+    }
+    .loading-spinner {
+      width: 40px; height: 40px;
+      border: 3px solid #e5e7eb;
+      border-top-color: #6366f1;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-text { color: #9ca3af; font-size: 14px; font-weight: 500; }
+
+    .token-screen {
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+    }
+    .token-card {
+      background: #fff;
+      border-radius: 20px;
+      padding: 48px 40px;
+      text-align: center;
+      max-width: 440px;
+      width: 100%;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+    .token-card .logo {
+      width: 64px; height: 64px;
+      background: linear-gradient(135deg, #e94560, #ff6b6b);
+      border-radius: 16px;
+      margin: 0 auto 20px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 32px;
+      box-shadow: 0 8px 24px rgba(233,69,96,0.3);
+    }
+    .token-card h1 { font-size: 24px; font-weight: 800; color: #1a1a2e; margin-bottom: 6px; letter-spacing: -0.5px; }
+    .token-card p { color: #9ca3af; margin-bottom: 24px; font-size: 14px; }
+    .token-card input {
+      width: 100%;
+      padding: 14px 18px;
+      border: 2px solid #e5e7eb;
+      border-radius: 12px;
+      font-size: 15px;
+      font-family: 'Inter', monospace;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .token-card input:focus {
+      border-color: #6366f1;
+      box-shadow: 0 0 0 4px rgba(99,102,241,0.1);
+    }
+    .token-card input::placeholder { color: #d1d5db; }
+    .token-hint { font-size: 12px; color: #b0b4c0; margin-top: 12px; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+    const { useState, useEffect, useCallback } = React;
+    const API = `http://${window.location.hostname}:7878`;
+    const TOKEN = localStorage.getItem('dbrain-token') || '';
+
+    function api(path, opts = {}) {
+      return fetch(`${API}${path}`, {
+        ...opts,
+        headers: { 'Authorization': `Bearer ${TOKEN}`, 'Content-Type': 'application/json', ...opts.headers },
+      }).then(r => r.json());
+    }
+
+    function categoryClass(cat) {
+      if (cat === 'projects') return 'project';
+      if (cat === 'areas') return 'area';
+      if (cat === 'resources') return 'resource';
+      return 'archive';
+    }
+
+    function TokenPrompt({ onSave }) {
+      const [token, setToken] = useState('');
+      return (
+        <div className="token-screen">
+          <div className="token-card">
+            <div className="logo">&#x1F9E0;</div>
+            <h1>dbrain</h1>
+            <p>Enter your access token to connect to the brain</p>
+            <input
+              placeholder="sk-dbr_..."
+              value={token}
+              onChange={e => setToken(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && token && onSave(token)}
+              autoFocus
+            />
+            <div className="token-hint">Press Enter to connect</div>
+          </div>
+        </div>
+      );
+    }
+
+    function Dashboard() {
+      const [health, setHealth] = useState(null);
+      const [overview, setOverview] = useState(null);
+      const [selectedEntity, setSelectedEntity] = useState(null);
+      const [entityDetail, setEntityDetail] = useState(null);
+      const [searchQuery, setSearchQuery] = useState('');
+      const [searchResults, setSearchResults] = useState(null);
+      const [conversations, setConversations] = useState(null);
+      const [selectedConvo, setSelectedConvo] = useState(null);
+      const [convoDetail, setConvoDetail] = useState(null);
+      const [authed, setAuthed] = useState(!!TOKEN);
+
+      useEffect(() => {
+        if (!authed) return;
+        api('/health').then(setHealth).catch(() => {});
+        api('/memory/summary').then(setOverview).catch(() => {});
+        api('/conversations?limit=100').then(setConversations).catch(() => {});
+      }, [authed]);
+
+      useEffect(() => {
+        if (!selectedEntity) { setEntityDetail(null); return; }
+        api(`/entities/${selectedEntity}`).then(setEntityDetail).catch(() => {});
+      }, [selectedEntity]);
+
+      useEffect(() => {
+        if (!selectedConvo) { setConvoDetail(null); return; }
+        api(`/conversations/${selectedConvo}`).then(setConvoDetail).catch(() => {});
+      }, [selectedConvo]);
+
+      const doSearch = useCallback(() => {
+        if (!searchQuery.trim()) { setSearchResults(null); return; }
+        api('/search', { method: 'POST', body: JSON.stringify({ query: searchQuery, limit: 20 }) })
+          .then(setSearchResults).catch(() => {});
+      }, [searchQuery]);
+
+      if (!authed) {
+        return <TokenPrompt onSave={(t) => { localStorage.setItem('dbrain-token', t); window.location.reload(); }} />;
+      }
+
+      if (!health) return (
+        <div className="loading-screen">
+          <div className="loading-spinner"></div>
+          <div className="loading-text">Connecting to brain...</div>
+        </div>
+      );
+
+      const totalFacts = overview ? overview.reduce((sum, e) => sum + e.total, 0) : health.facts;
+      const hotFacts = overview ? overview.reduce((sum, e) => sum + e.hot, 0) : 0;
+      const warmFacts = overview ? overview.reduce((sum, e) => sum + e.warm, 0) : 0;
+      const coldFacts = overview ? overview.reduce((sum, e) => sum + e.cold, 0) : 0;
+
+      if (selectedConvo && convoDetail) {
+        return (
+          <>
+            <div className="header">
+              <div className="header-inner">
+                <div className="header-left">
+                  <div className="brain-icon">&#x1F9E0;</div>
+                  <span className="header-title">{health.name}</span>
+                  <span className="header-version">v{health.version}</span>
+                </div>
+                <div className="header-right">
+                  <span className="pulse"></span>
+                  <span className="status-text">Online</span>
+                </div>
+              </div>
+            </div>
+            <div className="container">
+              <div className="detail-header">
+                <button className="back-btn" onClick={() => setSelectedConvo(null)}>&larr;</button>
+                <span className="detail-name">{convoDetail.started_at?.split('T')[0]}</span>
+                <span className="detail-meta">{convoDetail.source}</span>
+              </div>
+              <div className="section-title">
+                Messages
+                <span className="count">{convoDetail.messages?.length || 0}</span>
+              </div>
+              <div className="messages-list">
+                {convoDetail.messages?.map(m => (
+                  <div className={`msg-row ${m.role}`} key={m.id}>
+                    <div className="msg-role">{m.role}</div>
+                    <div className="msg-content">{m.content}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </>
+        );
+      }
+
+      if (selectedEntity && entityDetail) {
+        return (
+          <>
+            <div className="header">
+              <div className="header-inner">
+                <div className="header-left">
+                  <div className="brain-icon">&#x1F9E0;</div>
+                  <span className="header-title">{health.name}</span>
+                  <span className="header-version">v{health.version}</span>
+                </div>
+                <div className="header-right">
+                  <span className="pulse"></span>
+                  <span className="status-text">Online</span>
+                </div>
+              </div>
+            </div>
+            <div className="container">
+              <div className="detail-header">
+                <button className="back-btn" onClick={() => setSelectedEntity(null)}>&larr;</button>
+                <span className="detail-name">{entityDetail.name}</span>
+                <span className="detail-meta">{entityDetail.type} / {entityDetail.category}</span>
+              </div>
+              <div className="section-title">
+                Facts
+                <span className="count">{entityDetail.facts?.length || 0}</span>
+              </div>
+              <div className="facts-list">
+                {entityDetail.facts?.map(f => (
+                  <div className="fact-row" key={f.id}>
+                    <span className="fact-text">{f.fact}</span>
+                    <div className="fact-meta">
+                      <span className="fact-category">{f.category}</span>
+                      <span className={`tier ${f.tier}`}>{f.tier}</span>
+                      <span className="access-count">{f.access_count}x</span>
+                    </div>
+                  </div>
+                ))}
+                {(!entityDetail.facts || entityDetail.facts.length === 0) && (
+                  <div className="empty">No facts recorded for this entity</div>
+                )}
+              </div>
+            </div>
+          </>
+        );
+      }
+
+      return (
+        <>
+          <div className="header">
+            <div className="header-inner">
+              <div className="header-left">
+                <div className="brain-icon">&#x1F9E0;</div>
+                <span className="header-title">{health.name}</span>
+                <span className="header-version">v{health.version}</span>
+              </div>
+              <div className="header-right">
+                <span className="pulse"></span>
+                <span className="status-text">Online</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="container">
+            <div className="stats">
+              <div className="stat entities">
+                <div className="value">{health.entities}</div>
+                <div className="label">Entities</div>
+              </div>
+              <div className="stat total">
+                <div className="value">{totalFacts}</div>
+                <div className="label">Facts</div>
+              </div>
+              <div className="stat hot">
+                <div className="value">{hotFacts}</div>
+                <div className="label">Hot</div>
+              </div>
+              <div className="stat warm">
+                <div className="value">{warmFacts}</div>
+                <div className="label">Warm</div>
+              </div>
+              <div className="stat cold">
+                <div className="value">{coldFacts}</div>
+                <div className="label">Cold</div>
+              </div>
+              <div className="stat convos">
+                <div className="value">{health.conversations}</div>
+                <div className="label">Conversations</div>
+              </div>
+            </div>
+
+            <div className="search-box">
+              <span className="search-icon">&#x1F50D;</span>
+              <input
+                placeholder="Search memories..."
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && doSearch()}
+              />
+            </div>
+
+            {searchResults && (
+              <div className="results">
+                <div className="section-title">
+                  Results
+                  <span className="count">{searchResults.length}</span>
+                </div>
+                {searchResults.length === 0 && <div className="empty">No memories found</div>}
+                {searchResults.map((r, i) => (
+                  <div className="result-item" key={i}>
+                    <div className="fact">{r.fact.fact}</div>
+                    <div className="meta">
+                      <span className="entity-tag">{r.entity.name}</span>
+                      <span className={`tier ${r.fact.tier}`}>{r.fact.tier}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div>
+              <div className="section-title">
+                Entities
+                <span className="count">{overview?.length || 0}</span>
+              </div>
+              <div className="entities-grid">
+                {overview?.map(e => (
+                  <div className={`entity-card ${categoryClass(e.category)}`} key={e.id} onClick={() => setSelectedEntity(e.id)}>
+                    <div className="entity-name">{e.name}</div>
+                    <div className="entity-type">{e.type} &middot; {e.category}</div>
+                    <div className="tiers">
+                      {e.hot > 0 && <span className="tier hot">{e.hot} hot</span>}
+                      {e.warm > 0 && <span className="tier warm">{e.warm} warm</span>}
+                      {e.cold > 0 && <span className="tier cold">{e.cold} cold</span>}
+                      {e.total === 0 && <span className="tier empty-tier">empty</span>}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {conversations && conversations.length > 0 && (
+              <div>
+                <div className="section-title">
+                  Conversations
+                  <span className="count">{conversations.length}</span>
+                </div>
+                <div className="convos-list">
+                  {conversations.map(c => (
+                    <div className="conv-row" key={c.id} onClick={() => setSelectedConvo(c.id)}>
+                      <span className="conv-date">{c.started_at?.split('T')[0]}</span>
+                      <span className="conv-summary">{c.summary || c.id}</span>
+                      <span className="conv-source">{c.source}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<Dashboard />);
+  </script>
+</body>
+</html>
