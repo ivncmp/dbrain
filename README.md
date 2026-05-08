@@ -179,12 +179,16 @@ npx dbrain init          # create a brain (only needed once)
 npm run dev              # starts the server with file watching
 ```
 
-| Script          | What it does                             |
-| --------------- | ---------------------------------------- |
-| `npm run dev`   | Dev server with file watching (tsx)      |
-| `npm run build` | Compile TypeScript + copy dashboard HTML |
-| `npm start`     | Start the compiled server from `dist/`   |
-| `npm test`      | Run tests with vitest                    |
+| Script               | What it does                             |
+| -------------------- | ---------------------------------------- |
+| `npm run dev`        | Dev server with file watching (tsx)      |
+| `npm run build`      | Compile TypeScript + copy dashboard HTML |
+| `npm start`          | Start the compiled server from `dist/`   |
+| `npm test`           | Run tests with vitest                    |
+| `npm run lint`       | ESLint check                             |
+| `npm run lint:fix`   | ESLint auto-fix                          |
+| `npm run format`     | Prettier format                          |
+| `npm run check`      | Lint + format + build (full pipeline)    |
 
 ## Environment Variables
 
