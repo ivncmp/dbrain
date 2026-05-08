@@ -22,7 +22,7 @@ async function main() {
       const { connect } = await import('./connect.js');
       const connectArgs = argv.slice(3).filter((a) => !a.startsWith('--'));
       const tokenFlag = argv.find((a) => a.startsWith('--token='))?.split('=')[1];
-      await connect(connectArgs[0], tokenFlag);
+      await connect(connectArgs[0], connectArgs[1], tokenFlag);
       break;
     }
     case 'status': {
@@ -37,7 +37,8 @@ dbrain — Your distributed mind. Wherever you go, I remember.
 Usage:
   dbrain init [path]                 Initialize a new brain (server)
   dbrain start [path]                Wake up
-  dbrain connect [url] [--token=]    Connect Claude Code to a brain (client)
+  dbrain connect <client> [url] [--token=]    Connect a client to a brain
+      clients: claude, opencode
   dbrain status [path]               Check brain status
 `);
   }

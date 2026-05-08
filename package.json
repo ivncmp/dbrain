@@ -1,6 +1,6 @@
 {
   "name": "dbrain",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Your distributed mind. Persistent knowledge across all your AIs.",
   "type": "module",
   "bin": {

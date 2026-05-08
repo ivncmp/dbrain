@@ -5,8 +5,36 @@ import { join } from 'node:path';
 import * as p from '@clack/prompts';
 import pc from 'picocolors';
 
-export async function connect(url?: string, tokenArg?: string) {
+const SUPPORTED_CLIENTS = ['claude', 'opencode'] as const;
+type Client = (typeof SUPPORTED_CLIENTS)[number];
+
+interface BrainConfig {
+  mcp: Record<string, unknown>;
+  permissions: string[];
+  claudeMd: string;
+}
+
+export async function connect(client?: string, url?: string, tokenArg?: string) {
   p.intro(pc.cyan('dbrain') + ' — Connect to a brain');
+
+  if (!client || !SUPPORTED_CLIENTS.includes(client as Client)) {
+    p.log.error(
+      client
+        ? `Unknown client "${client}". Supported: ${SUPPORTED_CLIENTS.join(', ')}`
+        : `Client is required. Usage: dbrain connect <client> [url] [--token=...]`,
+    );
+    p.log.info(`Supported clients: ${SUPPORTED_CLIENTS.join(', ')}`);
+    p.outro(pc.red('Aborted.'));
+    return;
+  }
+
+  const selectedClient = client as Client;
+
+  if (selectedClient === 'opencode') {
+    p.log.warning('opencode support is not available yet.');
+    p.outro(pc.yellow('Coming soon.'));
+    return;
+  }
 
   if (!url) {
     const input = await p.text({
@@ -39,14 +67,14 @@ export async function connect(url?: string, tokenArg?: string) {
   const s = p.spinner();
   s.start('Connecting to brain');
 
-  let config: { mcp: Record<string, unknown>; permissions: string[]; claudeMd: string };
+  let config: BrainConfig;
   try {
     const res = await fetch(`${url}/connect`, {
       headers: { Authorization: `Bearer ${tokenArg}` },
     });
     if (res.status === 401) throw new Error('Invalid token');
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    config = (await res.json()) as typeof config;
+    config = (await res.json()) as BrainConfig;
   } catch (err) {
     s.stop(pc.red('Failed to connect'));
     const message = err instanceof Error ? err.message : String(err);
@@ -66,6 +94,12 @@ export async function connect(url?: string, tokenArg?: string) {
     );
   }
 
+  configureClaude(config, s);
+
+  p.outro(pc.green('Connected. Restart Claude Code to activate.'));
+}
+
+function configureClaude(config: BrainConfig, s: ReturnType<typeof p.spinner>) {
   s.start('Configuring Claude Code');
 
   const claudeDir = join(homedir(), '.claude');
@@ -116,6 +150,4 @@ export async function connect(url?: string, tokenArg?: string) {
     ].join('\n'),
     'Files updated',
   );
-
-  p.outro(pc.green('Connected. Restart Claude Code to activate.'));
 }
