@@ -35,7 +35,7 @@ dbrain start      # starts API on :7878 + dashboard on :7879
 Then connect Claude Code from any machine:
 
 ```bash
-dbrain connect
+dbrain connect claude
 ```
 
 The wizard asks for the brain URL and token (shown during `init`):
@@ -69,7 +69,7 @@ The wizard asks for the brain URL and token (shown during `init`):
 Restart Claude Code and it will start using the brain. You can also skip the wizard:
 
 ```bash
-dbrain connect http://your-server:7878 --token=sk-dbr_...
+dbrain connect claude http://your-server:7878 --token=sk-dbr_...
 ```
 
 ## Docker
@@ -84,7 +84,7 @@ docker compose up -d
 Then from any client machine:
 
 ```bash
-dbrain connect http://your-server:7878
+dbrain connect claude http://your-server:7878
 ```
 
 ## How It Works
@@ -148,7 +148,7 @@ All endpoints require `Authorization: Bearer <token>` except `/health`.
 | ---------------------- | ------ | ----------------------------------------- |
 | `dbrain init [path]`   | Server | Create a new brain (DB, config, identity) |
 | `dbrain start [path]`  | Server | Start the API server + dashboard          |
-| `dbrain connect [url]` | Client | Connect Claude Code to a running brain    |
+| `dbrain connect <client> [url]` | Client | Connect a client to a running brain |
 | `dbrain status [path]` | Server | Check brain status                        |
 
 `init` runs on the **server** (creates the brain). `connect` runs on the **client** (configures Claude Code). The brain serves its own client config via `GET /connect`.

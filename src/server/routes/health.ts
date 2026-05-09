@@ -1,4 +1,12 @@
+import { readFileSync } from 'node:fs';
+import { join, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
 import type { FastifyInstance } from 'fastify';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const pkg = JSON.parse(readFileSync(join(__dirname, '..', '..', '..', 'package.json'), 'utf-8'));
+const VERSION = pkg.version;
 
 const CLAUDE_MD_CONTENT = `# dbrain
 
@@ -54,7 +62,7 @@ export async function healthRoutes(app: FastifyInstance) {
     return {
       status: 'awake',
       name,
-      version: '0.1.0',
+      version: VERSION,
       entities,
       facts,
       documents,

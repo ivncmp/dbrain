@@ -1,6 +1,6 @@
 {
   "name": "dbrain",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "Your distributed mind. Persistent knowledge across all your AIs.",
   "type": "module",
   "bin": {
@@ -9,7 +9,7 @@
   "scripts": {
     "dev": "tsx watch src/cli/index.ts start",
     "cli": "tsx src/cli/index.ts",
-    "build": "tsc && cp src/dashboard/index.html dist/dashboard/index.html && chmod +x dist/cli/index.js",
+    "build": "tsc && cp src/dashboard/index.html src/dashboard/logo*.png dist/dashboard/ && cp -r src/dashboard/icons dist/dashboard/icons && chmod +x dist/cli/index.js",
     "prepare": "husky",
     "start": "node dist/cli/index.js start",
     "test": "vitest",
