@@ -855,13 +855,16 @@ async fn list_conversations(
   Query(query): Query<ConversationListQuery>,
 ) -> Response {
   match with_db(&state.db, move |db| {
-    let mut sql = "SELECT id, source, started_at, ended_at, summary FROM conversations".to_string();
+    let mut sql = "SELECT c.id, c.source, c.started_at, c.ended_at, c.summary, \
+      (SELECT COUNT(*) FROM messages m WHERE m.conversation_id = c.id) AS message_count \
+      FROM conversations c"
+      .to_string();
     let mut sql_params: Vec<SqlValue> = Vec::new();
     if let Some(source) = query.source {
-      sql.push_str(" WHERE source = ?");
+      sql.push_str(" WHERE c.source = ?");
       sql_params.push(SqlValue::from(source));
     }
-    sql.push_str(" ORDER BY started_at DESC LIMIT ?");
+    sql.push_str(" ORDER BY c.started_at DESC LIMIT ?");
     sql_params.push(SqlValue::from(query.limit.unwrap_or(50)));
 
     let mut stmt = db.prepare(&sql).map_err(|e| {
@@ -877,6 +880,7 @@ async fn list_conversations(
           "started_at": row.get::<_, String>("started_at")?,
           "ended_at": row.get::<_, Option<String>>("ended_at")?,
           "summary": row.get::<_, Option<String>>("summary")?,
+          "message_count": row.get::<_, i64>("message_count")?,
         }))
       })
       .map_err(|e| {
