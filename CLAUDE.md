@@ -61,8 +61,8 @@ dbrain status
 ### Client setup
 
 ```bash
-# Connect Claude Code to a running brain (client only)
-dbrain connect http://your-server:7878
+# Connect a client to a running brain (client only)
+dbrain connect claude http://your-server:7878
 ```
 
 This fetches the config from the brain and writes three local files:
@@ -80,7 +80,7 @@ Docker internally runs `dbrain init --non-interactive + dbrain start`.
 
 After the server is running, connect from any client machine:
 ```bash
-dbrain connect http://your-server:7878
+dbrain connect claude http://your-server:7878
 ```
 
 ## CLI Commands
@@ -89,7 +89,7 @@ dbrain connect http://your-server:7878
 |---------|-------|---------|
 | `dbrain init [path]` | Server | Create a new brain (DB, config, identity) |
 | `dbrain start [path]` | Server | Start the API server + dashboard |
-| `dbrain connect [url]` | Client | Connect Claude Code to a running brain |
+| `dbrain connect <client> [url]` | Client | Connect a client to a running brain |
 | `dbrain status [path]` | Server | Check brain status |
 
 ### init vs connect (separation of concerns)
@@ -184,7 +184,7 @@ dbrain/
 
 ```bash
 # On the client machine, with the brain running:
-dbrain connect http://your-server:7878
+dbrain connect claude http://your-server:7878
 ```
 
 This calls `GET /connect` on the brain, which returns the exact MCP config, permissions, and behavioral instructions needed. The `connect` command writes them to the three local files automatically.

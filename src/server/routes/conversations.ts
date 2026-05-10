@@ -11,13 +11,15 @@ export async function conversationRoutes(app: FastifyInstance) {
 
   app.get('/conversations', async (request) => {
     const { source, limit = 50 } = request.query as { source?: string; limit?: number };
-    let sql = 'SELECT id, source, started_at, ended_at, summary FROM conversations';
+    let sql = `SELECT c.id, c.source, c.started_at, c.ended_at, c.summary,
+      (SELECT COUNT(*) FROM messages m WHERE m.conversation_id = c.id) AS message_count
+      FROM conversations c`;
     const params: (string | number)[] = [];
     if (source) {
-      sql += ' WHERE source = ?';
+      sql += ' WHERE c.source = ?';
       params.push(source);
     }
-    sql += ' ORDER BY started_at DESC LIMIT ?';
+    sql += ' ORDER BY c.started_at DESC LIMIT ?';
     params.push(limit);
     return db.prepare(sql).all(...params);
   });
