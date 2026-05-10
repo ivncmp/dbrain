@@ -24,8 +24,14 @@ docker-compose.override.yml
 temp/
 memory/
 
-# Old assets
-logo.jpg
+# Rust
+target/
 
 # Claude
 .claude
+
+# OpenCode
+.opencode/
+
+# Old assets
+logo.png
