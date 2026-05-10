@@ -1,6 +1,6 @@
 [package]
 name = "dbrain"
-version = "0.1.0"
+version = "0.2.1"
 edition = "2021"
 description = "Your distributed mind. Persistent knowledge across all your AIs."
 
